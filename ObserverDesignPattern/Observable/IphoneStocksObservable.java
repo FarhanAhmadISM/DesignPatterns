@@ -1,9 +1,13 @@
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class IphoneStocksObservable implements StocksObservable {
-    public List<NotificationObserver> observers = new ArrayList<>();
+    public List<NotificationObserver> observers = new CopyOnWriteArrayList<>();
     public int countOfStock = 0;
+    private final Lock lock = new ReentrantLock();
+
     @Override
     public void add(NotificationObserver observer) {
         observers.add(observer);
@@ -23,10 +27,14 @@ public class IphoneStocksObservable implements StocksObservable {
 
     @Override
     public void setStockQuantity(int newStocksAdded) {
-        this.countOfStock = newStocksAdded;
-        if(this.countOfStock == 0) {
-            return;
+        lock.lock();
+        try {
+            countOfStock = newStocksAdded;
+            if (countOfStock != 0) {
+                notifyUsers();
+            }
+        } finally {
+            lock.unlock();
         }
-        notifyUsers();
     }
 }
