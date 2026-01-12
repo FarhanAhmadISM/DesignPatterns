@@ -1,9 +1,11 @@
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class IphoneStocksObservable implements StocksObservable {
     public List<NotificationObserver> observers = new CopyOnWriteArrayList<>();
-    public volatile int countOfStock = 0;
+    public AtomicInteger countOfStock = new AtomicInteger(0);
+
     @Override
     public void add(NotificationObserver observer) {
         observers.add(observer);
@@ -22,11 +24,10 @@ public class IphoneStocksObservable implements StocksObservable {
     }
 
     @Override
-    public synchronized void setStockQuantity(int newStocksAdded) {
-        this.countOfStock = newStocksAdded;
-        if(this.countOfStock == 0) {
-            return;
+    public void setStockQuantity(int newStocksAdded) {
+        countOfStock.set(newStocksAdded);
+        if (newStocksAdded != 0) {
+            notifyUsers();
         }
-        notifyUsers();
     }
 }
